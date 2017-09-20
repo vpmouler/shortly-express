@@ -78,7 +78,42 @@ app.post('/links',
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/login', 
+(req, res) => {
+  res.render('login');
+});
 
+app.post('/login', 
+(req, res) => {
+  //see if there's a token in req header cookies, if so:
+    //compare to SESSION table to see if it's present
+    //if so, log them in
+    //if not (aka expired token), or if no token in req header cookie:
+      //query USERS table for hash and salt
+      //hash req.body.password with salt, compare to USERS table PW hash
+      //if matches: generate token salt, hash new token with token salt
+      //store username and token in SESSION table
+      //store a cookie on client side with token
+  console.log(req.body);
+});
+
+app.get('/signup', 
+(req, res) => {
+  res.render('signup');
+});
+
+app.post('/signup', 
+(req, res) => {
+  //generate user salt
+  //hash PW with user salt
+  //create row in USERS table: username, user salt, PW hash
+  //generate token salt, hash new token with token salt
+  //store username and token in SESSION table
+  //store a cookie on client side with token
+  
+  //login and return token
+  console.log(req.body);
+});
 
 /************************************************************/
 // Handle the code parameter route last - if all other routes fail

@@ -80,11 +80,14 @@ app.post('/links',
 
 app.get('/login', 
 (req, res) => {
+  console.log("GET HEADERS", req.headers.cookie);
   res.render('login');
 });
 
 app.post('/login', 
 (req, res) => {
+  
+  // console.log(req.cookie);
   //see if there's a token in req header cookies, if so:
     //compare to SESSION table to see if it's present
     //if so, log them in
@@ -95,6 +98,8 @@ app.post('/login',
       //store username and token in SESSION table
       //store a cookie on client side with token
   console.log(req.body);
+  res.cookie('butts', 'hihi123');
+  // res.send({token: 'the namer of the osadfasdf'});
 });
 
 app.get('/signup', 
@@ -113,9 +118,13 @@ app.post('/signup',
   //generate token salt, hash new token with token salt
   //store username and token in SESSION table
   //store a cookie on client side with token
+
+  let token = models.Sessions.create().then((obj) => console.log('HI', obj));
+    // still need to add userId here
+    
+    // res.cookie('TOKEN', HASHED TOKEN VALUE);
   
   //login and return token
-  console.log(newUser);
 });
 
 /************************************************************/

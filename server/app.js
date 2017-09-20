@@ -105,14 +105,17 @@ app.get('/signup',
 app.post('/signup', 
 (req, res) => {
   //generate user salt
+  // let salt = utils.createRandom32String();
   //hash PW with user salt
+  // let hashPW = utils.createHash(req.body.password, salt);
   //create row in USERS table: username, user salt, PW hash
+  let newUser = models.Users.create(req.body);
   //generate token salt, hash new token with token salt
   //store username and token in SESSION table
   //store a cookie on client side with token
   
   //login and return token
-  console.log(req.body);
+  console.log(newUser);
 });
 
 /************************************************************/

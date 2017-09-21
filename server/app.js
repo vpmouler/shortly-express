@@ -17,13 +17,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 
+app.use('/', cookieParser, Auth.createSession); //changed on lunch
 
 app.get('/', 
 (req, res) => {
-  // if (!models.Sessions.isLoggedIn()) {
-  //   res.redirect('/login');  
-  // }
-  res.render('index');
+  if (!req.authorized) {
+    res.redirect('/login');  
+  } else {
+    res.render('index');
+  }
 });
 
 app.get('/create', 
@@ -82,15 +84,30 @@ app.post('/links',
 // Write your authentication routes here
 /************************************************************/
 
-app.use('/login', cookieParser);
+//app.use('/login', cookieParser); //changed on lunch
 
-app.use('/login', Auth.createSession);
+app.use('/login', cookieParser, Auth.createSession); //changed on lunch
+
+//app.use('/logout', cookieParser);
+
+app.get('/logout', function(req, res) {
+  // req.body.username
+  // clear session
+  console.log(req.headers.cookie);
+  if (req.headers.cookie) {
+    models.Sessions.delete({hash: req.headers.cookie.TOKEN});
+  }
+  // remove cookie
+  res.clearCookie('TOKEN'); //changed on lunch
+  // redirect to signin
+  res.redirect('/login');
+});
 
 app.get('/login', 
 (req, res) => {
-  if (req.authorized) {
+  if (req.authorized) { //changed on lunch
     res.redirect('/');
-  } else {
+  } else { //changed on lunch
     res.render('login');
   }
 });
@@ -98,9 +115,10 @@ app.get('/login',
 app.post('/login', 
 (req, res) => {
   // get req.body.un & pw
+  //TODO: move below into helper (middleware) function:
   var userId;
   models.Users.get({username: req.body.username})
-  .then((data) => {
+  .then(data => {
     if ( !data ) {
       res.redirect('/signup'); // change to blow up red screen
     } else {
@@ -108,28 +126,21 @@ app.post('/login',
       return models.Users.compare(req.body.password, data.password, data.salt);
     }
   })
-  .then((truth) => {
+  .then(truth => {
     console.log('this is if pw matched and userId', truth, userId);
     if (truth) {
       return models.Sessions.create(userId);
     } else {
-      console.log('password did not match');
-      res.redirect('/login');
+      throw 'Password did not match';
     }
   })
   .then(dbTokenResult => models.Sessions.get({id: dbTokenResult.insertId}))
-  .then((dbRow) => {
+  .then(dbRow => {
     console.log('this is the token hash', dbRow.hash);
     res.cookie('TOKEN', dbRow.hash);
     res.redirect('/');
-  });
-  // .catch(err => console.error(err));
-
-    //   .then(dbTokenResult => models.Sessions.get({id: dbTokenResult.insertId}))
-    // .then(dbRow => res.cookie('TOKEN', dbRow.hash) && res.send());
-
-
-  //compare(attempted, password, salt) {
+  })
+  .catch(() => res.redirect('/login'));
 
   // query USERS table for un, pw, salt
   // hash req.body.pw and compare w/ hashed table from query

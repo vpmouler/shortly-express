@@ -99,7 +99,7 @@ app.post('/login',
 (req, res) => {
   // get req.body.un & pw
   var userId;
-  models.Users.get({username:req.body.username})
+  models.Users.get({username: req.body.username})
   .then((data) => {
     if ( !data ) {
       res.redirect('/signup'); // change to blow up red screen
@@ -113,13 +113,13 @@ app.post('/login',
     if (truth) {
       return models.Sessions.create(userId);
     } else {
-      console.log('password did not match')
+      console.log('password did not match');
       res.redirect('/login');
     }
   })
   .then(dbTokenResult => models.Sessions.get({id: dbTokenResult.insertId}))
   .then((dbRow) => {
-    console.log('this is the token hash',dbRow.hash);
+    console.log('this is the token hash', dbRow.hash);
     res.cookie('TOKEN', dbRow.hash);
     res.redirect('/');
   });

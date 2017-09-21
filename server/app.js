@@ -4,6 +4,7 @@ const utils = require('./lib/hashUtils');
 const partials = require('express-partials');
 const bodyParser = require('body-parser');
 const Auth = require('./middleware/auth');
+const cookieParser = require('./middleware/cookieParser');
 const models = require('./models');
 
 const app = express();
@@ -19,6 +20,9 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.get('/', 
 (req, res) => {
+  // if (!models.Sessions.isLoggedIn()) {
+  //   res.redirect('/login');  
+  // }
   res.render('index');
 });
 
@@ -78,15 +82,23 @@ app.post('/links',
 // Write your authentication routes here
 /************************************************************/
 
+app.use('/login', cookieParser);
+
+app.use('/login', Auth.createSession);
+
 app.get('/login', 
 (req, res) => {
-  console.log('GET HEADERS', req.headers.cookie);
-  res.render('login');
+  if (req.authorized) {
+    res.redirect('/');
+  } else {
+    res.render('login');
+  }
 });
 
 app.post('/login', 
 (req, res) => {
-  
+  //if (req.headers.cookie)
+  //models.Sessions.get({})
   // console.log(req.cookie);
   //see if there's a token in req header cookies, if so:
     //compare to SESSION table to see if it's present
@@ -116,7 +128,7 @@ app.post('/signup',
     .then(thing => thing.insertId)
     .then(thingId => models.Sessions.create(thingId))
     .then(dbTokenResult => models.Sessions.get({id: dbTokenResult.insertId}))
-    .then(dbRow => res.cookie('TOKEN', dbRow.hash) && res.send());
+    .then(dbRow => res.cookie('TOKEN', dbRow.hash) && res.cookie('LULZ', 'haha') && res.send());
   //generate token salt, hash new token with token salt
   //store username and token in SESSION table
   //store a cookie on client side with token

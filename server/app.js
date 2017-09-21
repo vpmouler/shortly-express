@@ -97,9 +97,48 @@ app.get('/login',
 
 app.post('/login', 
 (req, res) => {
-  //if (req.headers.cookie)
-  //models.Sessions.get({})
-  // console.log(req.cookie);
+  // get req.body.un & pw
+  var userId;
+  models.Users.get({username:req.body.username})
+  .then((data) => {
+    if ( !data ) {
+      res.redirect('/signup'); // change to blow up red screen
+    } else {
+      userId = data.id;
+      return models.Users.compare(req.body.password, data.password, data.salt);
+    }
+  })
+  .then((truth) => {
+    console.log('this is if pw matched and userId', truth, userId);
+    if (truth) {
+      return models.Sessions.create(userId);
+    } else {
+      console.log('password did not match')
+      res.redirect('/login');
+    }
+  })
+  .then(dbTokenResult => models.Sessions.get({id: dbTokenResult.insertId}))
+  .then((dbRow) => {
+    console.log('this is the token hash',dbRow.hash);
+    res.cookie('TOKEN', dbRow.hash);
+    res.redirect('/');
+  });
+  // .catch(err => console.error(err));
+
+    //   .then(dbTokenResult => models.Sessions.get({id: dbTokenResult.insertId}))
+    // .then(dbRow => res.cookie('TOKEN', dbRow.hash) && res.send());
+
+
+  //compare(attempted, password, salt) {
+
+  // query USERS table for un, pw, salt
+  // hash req.body.pw and compare w/ hashed table from query
+  // if match, create session & reroute home page
+  
+  // if not match, route back to login (preferrably red screen blow up)
+
+
+
   //see if there's a token in req header cookies, if so:
     //compare to SESSION table to see if it's present
     //if so, log them in
@@ -128,7 +167,7 @@ app.post('/signup',
     .then(thing => thing.insertId)
     .then(thingId => models.Sessions.create(thingId))
     .then(dbTokenResult => models.Sessions.get({id: dbTokenResult.insertId}))
-    .then(dbRow => res.cookie('TOKEN', dbRow.hash) && res.cookie('LULZ', 'haha') && res.send());
+    .then(dbRow => res.cookie('TOKEN', dbRow.hash) && res.redirect('/'));
   //generate token salt, hash new token with token salt
   //store username and token in SESSION table
   //store a cookie on client side with token

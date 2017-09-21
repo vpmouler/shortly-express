@@ -80,7 +80,7 @@ app.post('/links',
 
 app.get('/login', 
 (req, res) => {
-  console.log("GET HEADERS", req.headers.cookie);
+  console.log('GET HEADERS', req.headers.cookie);
   res.render('login');
 });
 
@@ -97,13 +97,11 @@ app.post('/login',
       //if matches: generate token salt, hash new token with token salt
       //store username and token in SESSION table
       //store a cookie on client side with token
-  console.log(req.body);
-  res.cookie('butts', 'hihi123');
-  // res.send({token: 'the namer of the osadfasdf'});
 });
 
 app.get('/signup', 
 (req, res) => {
+  console.log('COOKIE IS:', req.headers.cookie);
   res.render('signup');
 });
 
@@ -114,12 +112,15 @@ app.post('/signup',
   //hash PW with user salt
   // let hashPW = utils.createHash(req.body.password, salt);
   //create row in USERS table: username, user salt, PW hash
-  let newUser = models.Users.create(req.body);
+  let token = models.Users.create(req.body)
+    .then(thing => thing.insertId)
+    .then(thingId => models.Sessions.create(thingId))
+    .then(dbTokenResult => models.Sessions.get({id: dbTokenResult.insertId}))
+    .then(dbRow => res.cookie('TOKEN', dbRow.hash) && res.send());
   //generate token salt, hash new token with token salt
   //store username and token in SESSION table
   //store a cookie on client side with token
-
-  let token = models.Sessions.create().then((obj) => console.log('HI', obj));
+  // let token = models.Sessions.create().then((obj) => console.log('HI', obj));
     // still need to add userId here
     
     // res.cookie('TOKEN', HASHED TOKEN VALUE);
